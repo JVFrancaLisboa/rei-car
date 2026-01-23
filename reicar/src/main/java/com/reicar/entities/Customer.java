@@ -14,5 +14,6 @@ public class Customer {
     private String name;
     private String phone;
     private String city;
+    @Column(columnDefinition = "CHAR(2)")
     private String state;
 }
