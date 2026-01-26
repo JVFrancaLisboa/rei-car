@@ -10,8 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -21,22 +21,17 @@ public class ServiceOrderService {
     private final ServiceOrderRepository repository;
     private final CustomerRepository customerRepository;
 
-    /**
-     * Utiliza o novo método do repositório com JOIN FETCH
-     * para evitar LazyInitializationException no Dashboard.
-     */
     public List<ServiceOrder> findAll() {
         return repository.findAllWithCustomer();
     }
 
     @Transactional
     public ServiceOrder saveFromDto(ServiceOrderDTO dto) {
-        // 1. Instanciação
         ServiceOrder order = "MECHANIC".equalsIgnoreCase(dto.type())
                 ? new MechanicServiceOrder()
                 : new TireShopServiceOrder();
 
-        // 2. Persistência do Cliente
+        // Persistência do Cliente
         Customer customer = new Customer();
         customer.setName(dto.customerName());
         customer.setPhone(dto.customerPhone());
@@ -44,13 +39,14 @@ public class ServiceOrderService {
         customer.setState(dto.customerState());
         customerRepository.save(customer);
 
-        // 3. Dados Básicos
         order.setCustomer(customer);
         order.setOrderNumber(generateNextOrderNumber());
         order.setEntryDate(LocalDate.now());
         order.setStatus(ServiceStatus.OPEN);
 
-        // 4. Atribuição de campos específicos (Pattern Matching)
+        order.setServiceValue(dto.serviceValue() != null ? dto.serviceValue() : BigDecimal.ZERO);
+
+        // mAtribuição de campos específicos
         if (order instanceof MechanicServiceOrder mso) {
             mso.setTechnicalDiagnosis(dto.technicalDiagnosis());
             mso.setVehicleKm(dto.vehicleKm());
@@ -58,36 +54,25 @@ public class ServiceOrderService {
             tso.setTirePosition(dto.tirePosition());
         }
 
-        // 5. Mapeamento de Itens
-        List<ServiceItem> entityItems = dto.items().stream()
-                .map(itemDto -> {
-                    ServiceItem item = new ServiceItem();
-                    item.setQuantity(itemDto.quantity());
-                    item.setDescription(itemDto.description());
-                    item.setUnitPrice(itemDto.unitPrice());
-                    item.setServiceOrder(order);
-                    return item;
-                }).toList();
-        order.setItems(entityItems);
+        // Mapeamento de Itens (Suporta lista vazia para apenas mão de obra)
+        if (dto.items() != null && !dto.items().isEmpty()) {
+            List<ServiceItem> entityItems = dto.items().stream()
+                    .map(itemDto -> {
+                        ServiceItem item = new ServiceItem();
+                        item.setQuantity(itemDto.quantity());
+                        item.setDescription(itemDto.description());
+                        item.setUnitPrice(itemDto.unitPrice());
+                        item.setServiceOrder(order);
+                        return item;
+                    }).toList();
+            order.getItems().addAll(entityItems);
+        }
 
-        // 6. Cálculo do Total (Mantido no Service conforme solicitado)
-        calculateTotal(order);
+        // Define o markup: 1.30 (Mecânica) ou 1.0 (Borracharia)
+        double markup = (order instanceof MechanicServiceOrder) ? 1.30 : 1.0;
+        order.calculateTotalValue(markup);
 
         return repository.save(order);
-    }
-
-    private void calculateTotal(ServiceOrder order) {
-        BigDecimal markup = new BigDecimal("1.30");
-
-        BigDecimal total = order.getItems().stream()
-                .map(item -> {
-                    BigDecimal subtotal = item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
-                    // Aplica 30% apenas se for mecânica
-                    return (order instanceof MechanicServiceOrder) ? subtotal.multiply(markup) : subtotal;
-                })
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        order.setTotalValue(total.setScale(2, RoundingMode.HALF_UP));
     }
 
     private String generateNextOrderNumber() {

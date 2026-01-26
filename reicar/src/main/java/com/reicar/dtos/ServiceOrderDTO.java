@@ -1,5 +1,6 @@
 package com.reicar.dtos;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,9 +13,10 @@ public record ServiceOrderDTO(
         String technicalDiagnosis,
         Integer vehicleKm,
         String tirePosition,
+        BigDecimal serviceValue,
         List<ServiceItemDTO> items
 ) {
     public ServiceOrderDTO() {
-        this(null, null, "Sol Nascente", "DF", null, null, null, null, new ArrayList<>());
+        this(null, null, "Sol Nascente", "DF", null, null, null, null, BigDecimal.ZERO, new ArrayList<>());
     }
 }

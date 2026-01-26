@@ -11,12 +11,14 @@
         body { background-color: #f4f7f9; }
         .card-header-reicar { background-color: var(--reicar-blue); color: white; font-weight: bold; }
         .section-title { border-left: 4px solid var(--reicar-gold); padding-left: 10px; margin-bottom: 20px; color: var(--reicar-blue); }
+        .input-total-final { font-size: 1.1rem; color: var(--reicar-blue); }
+        .table tfoot input { background-color: #fff !important; }
     </style>
 </head>
 <body>
 
 <div class="container py-5">
-    <form th:action="@{/so/register}" method="post">
+    <form th:action="@{/so/register}" th:object="${order}" method="post">
 
         <input type="hidden" name="type" th:value="${type}">
 
@@ -85,10 +87,10 @@
                         <th style="width: 5%;"></th>
                     </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="itemsBody">
                     <tr class="item-row">
                         <td><input type="number" name="items[0].quantity" class="form-control text-center input-qty" value="1" min="1"></td>
-                        <td><input type="text" name="items[0].description" class="form-control" placeholder="Descrição do item" required></td>
+                        <td><input type="text" name="items[0].description" class="form-control" placeholder="Descrição do item"></td>
                         <td><input type="number" name="items[0].unitPrice" class="form-control text-end input-price" step="0.01" value="0.00"></td>
                         <td><input type="text" class="form-control text-end row-total" value="0,00" readonly></td>
                         <td class="text-center">
@@ -98,13 +100,20 @@
                     </tbody>
                     <tfoot>
                     <tr>
-                        <td colspan="3" class="text-end fw-bold">VALOR TOTAL:</td>
-                        <td class="bg-light fw-bold text-end" id="grandTotal">R$ 0,00</td>
-                        <td></td>
+                        <td colspan="3" class="text-end fw-bold align-middle text-uppercase">Mão de Obra / Serviço (R$):</td>
+                        <td>
+                            <input type="number" name="serviceValue" id="serviceValue" class="form-control text-end fw-bold text-primary" step="0.01" value="0.00">
+                        </td>
+                        <td class="bg-light"></td>
+                    </tr>
+                    <tr>
+                        <td colspan="3" class="text-end fw-bold align-middle text-uppercase">Valor Total da OS:</td>
+                        <td class="bg-dark text-white fw-bold text-end input-total-final" id="grandTotal">R$ 0,00</td>
+                        <td class="bg-light"></td>
                     </tr>
                     </tfoot>
                 </table>
-                <button type="button" class="btn btn-sm btn-outline-primary" onclick="addRow()"><i class="bi bi-plus-circle me-1"></i> Adicionar Item</button>
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="addRow()"><i class="bi bi-plus-circle me-1"></i> Adicionar Peça</button>
             </div>
         </div>
 
@@ -119,13 +128,13 @@
     let rowIndex = 1;
 
     function addRow() {
-        const tbody = document.querySelector("#itemsTable tbody");
+        const tbody = document.getElementById("itemsBody");
         const newRow = document.createElement("tr");
         newRow.classList.add("item-row");
 
         newRow.innerHTML = `
             <td><input type="number" name="items[${rowIndex}].quantity" class="form-control text-center input-qty" value="1" min="1"></td>
-            <td><input type="text" name="items[${rowIndex}].description" class="form-control" required></td>
+            <td><input type="text" name="items[${rowIndex}].description" class="form-control" placeholder="Descrição do item"></td>
             <td><input type="number" name="items[${rowIndex}].unitPrice" class="form-control text-end input-price" step="0.01" value="0.00"></td>
             <td><input type="text" class="form-control text-end row-total" value="0,00" readonly></td>
             <td class="text-center">
@@ -140,60 +149,55 @@
 
     function removeRow(btn) {
         const row = btn.closest('tr');
-        if (document.querySelectorAll('.item-row').length > 1) {
-            row.remove();
-            reindexRows();
-            calculateGrandTotal();
-        }
+        row.remove();
+        reindexRows();
+        calculateGrandTotal();
     }
 
     function reindexRows() {
         const rows = document.querySelectorAll(".item-row");
-        rowIndex = 0;
-        rows.forEach(row => {
-            row.querySelector(".input-qty").name = `items[${rowIndex}].quantity`;
-            row.querySelector("input[name*='description']").name = `items[${rowIndex}].description`;
-            row.querySelector(".input-price").name = `items[${rowIndex}].unitPrice`;
-            rowIndex++;
+        rows.forEach((row, idx) => {
+            row.querySelector("input[name*='.quantity']").name = `items[${idx}].quantity`;
+            row.querySelector("input[name*='.description']").name = `items[${idx}].description`;
+            row.querySelector("input[name*='.unitPrice']").name = `items[${idx}].unitPrice`;
         });
+        rowIndex = rows.length;
     }
 
     function calculateGrandTotal() {
-        let total = 0;
-        // Captura o tipo de serviço do campo oculto que criamos
+        let totalItems = 0;
         const type = document.querySelector('input[name="type"]').value;
         const markup = (type === 'MECHANIC') ? 1.30 : 1.0;
 
         document.querySelectorAll(".item-row").forEach(row => {
             const qty = parseFloat(row.querySelector(".input-qty").value) || 0;
             const price = parseFloat(row.querySelector(".input-price").value) || 0;
-
-            // Calcula o subtotal com o acréscimo de 30%
             const subtotal = (qty * price) * markup;
 
-            // Atualiza o campo de total da linha
             row.querySelector(".row-total").value = subtotal.toLocaleString('pt-BR', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
             });
-
-            total += subtotal;
+            totalItems += subtotal;
         });
 
-        // Atualiza o Valor Total no rodapé da tabela
-        document.getElementById("grandTotal").innerText = "R$ " + total.toLocaleString('pt-BR', {
+        const serviceValue = parseFloat(document.getElementById("serviceValue").value) || 0;
+        const grandTotal = totalItems + serviceValue;
+
+        document.getElementById("grandTotal").innerText = "R$ " + grandTotal.toLocaleString('pt-BR', {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         });
     }
 
     function attachListeners() {
-        document.querySelectorAll(".input-qty, .input-price").forEach(input => {
+        document.querySelectorAll(".input-qty, .input-price, #serviceValue").forEach(input => {
             input.oninput = calculateGrandTotal;
         });
     }
 
     attachListeners();
+    calculateGrandTotal();
 </script>
 
 </body>
