@@ -62,14 +62,6 @@ Fluxos distintos de abertura de Ordens de Serviço (OS):
 - **Borracharia** (posição e troca de pneus)
 
 📸 *Exemplo da tela de abertura de OS*  
-![Formulário de OS](assets/service-order-form.png)
-
----
-
-### 🧮 Cálculos Automáticos
-Aplicação dinâmica de valores com suporte a múltiplos itens e cálculo integrado de mão de obra, evitando erros manuais.
-
----
 
 ### 📊 Dashboard Operacional
 Resumo financeiro e operacional com status visual das Ordens de Serviço (**Aberta / Finalizada**).
@@ -79,11 +71,20 @@ Resumo financeiro e operacional com status visual das Ordens de Serviço (**Aber
 
 ---
 
+![Formulário de OS](assets/service-order-form.png)
+
+---
+
 ### 📄 Exportação em PDF
 Geração de documentos profissionais para entrega ao cliente final.
 
 📸 *Exemplo de OS em PDF*  
 ![OS em PDF](assets/service-order-pdf.png)
+
+---
+
+### 🧮 Cálculos Automáticos
+Aplicação dinâmica de valores com suporte a múltiplos itens e cálculo integrado de mão de obra, evitando erros manuais.
 
 ---
 
