@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -36,7 +35,6 @@ public class ServiceOrderService {
                 ? new MechanicServiceOrder()
                 : new TireShopServiceOrder();
 
-        // Persistência do Cliente
         Customer customer = new Customer();
         customer.setName(dto.customerName());
         customer.setPhone(dto.customerPhone());
@@ -51,7 +49,6 @@ public class ServiceOrderService {
 
         order.setServiceValue(dto.serviceValue() != null ? dto.serviceValue() : BigDecimal.ZERO);
 
-        // mAtribuição de campos específicos
         if (order instanceof MechanicServiceOrder mso) {
             mso.setTechnicalDiagnosis(dto.technicalDiagnosis());
             mso.setVehicleKm(dto.vehicleKm());
@@ -59,7 +56,6 @@ public class ServiceOrderService {
             tso.setTirePosition(dto.tirePosition());
         }
 
-        // Mapeamento de Itens (Suporta lista vazia para apenas mão de obra)
         if (dto.items() != null && !dto.items().isEmpty()) {
             List<ServiceItem> entityItems = dto.items().stream()
                     .map(itemDto -> {
@@ -73,7 +69,6 @@ public class ServiceOrderService {
             order.getItems().addAll(entityItems);
         }
 
-        // Define o markup: 1.30 (Mecânica) ou 1.0 (Borracharia)
         double markup = (order instanceof MechanicServiceOrder) ? 1.30 : 1.0;
         order.calculateTotalValue(markup);
 

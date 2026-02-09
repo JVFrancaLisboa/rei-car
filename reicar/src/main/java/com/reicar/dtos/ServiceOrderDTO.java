@@ -17,6 +17,8 @@ public record ServiceOrderDTO(
         List<ServiceItemDTO> items
 ) {
     public ServiceOrderDTO() {
-        this(null, null, "Sol Nascente", "DF", null, null, null, null, BigDecimal.ZERO, new ArrayList<>());
+        this(null, null, "Sol Nascente", "DF",
+                null, null, null, null,
+                BigDecimal.ZERO, new ArrayList<>());
     }
 }
