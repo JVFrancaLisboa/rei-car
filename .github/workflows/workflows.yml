@@ -29,7 +29,7 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      - name: Build with Maven
+      - name: Build Maven
         run: mvn -B clean compile --file pom.xml
 
       - name: Run Tests
