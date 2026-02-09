@@ -14,7 +14,6 @@ public class DashboardController {
 
     @GetMapping("/dashboard")
     public String showDashboard(Model model) {
-        // Busca todas as OS
         model.addAttribute("orders", repository.findAll());
         return "screens/dashboard";
     }

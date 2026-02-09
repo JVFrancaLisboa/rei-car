@@ -9,7 +9,6 @@ import java.math.BigDecimal;
 
 @ControllerAdvice
 public class WebConfig {
-
     // Conversor de moeda
     @InitBinder
     public void initBinder(WebDataBinder binder) {

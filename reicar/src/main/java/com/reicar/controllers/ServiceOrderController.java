@@ -19,7 +19,7 @@ import java.io.IOException;
 public class ServiceOrderController {
 
     private final ServiceOrderService service;
-    private final PdfGeneratorService pdfGeneratorService; // Injeção adicionada
+    private final PdfGeneratorService pdfGeneratorService;
 
     @GetMapping("/register")
     public String showForm(@RequestParam(name = "type", defaultValue = "MECHANIC") String type, Model model) {
@@ -42,7 +42,7 @@ public class ServiceOrderController {
         String headerValue = "attachment; filename=OS_Reicar_" + id + ".pdf";
         response.setHeader(headerKey, headerValue);
 
-        ServiceOrder order = service.findById(id); // Recupera com JOIN FETCH via repositório
+        ServiceOrder order = service.findById(id);
         pdfGeneratorService.export(response, order);
     }
 }
