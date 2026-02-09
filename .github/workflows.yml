@@ -33,4 +33,4 @@ jobs:
       run: mvn -B clean compile --file pom.xml
 
     - name: Run Tests
-      run: mvn -B test --file pom.xml
+      run: mvn -B test --file pom.xml 
